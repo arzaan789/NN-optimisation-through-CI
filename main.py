@@ -71,7 +71,7 @@ class WeightParticle:
         return mse
 
 
-def run_weight_pso(n_layers,n_hidden, n_particles=50, max_iter=50):
+def run_weight_pso(n_layers,n_hidden, n_particles, max_iter):
     swarm = [WeightParticle(n_layers,n_hidden) for _ in range(n_particles)]
     global_best = None
     global_best_value = float('inf')
@@ -124,15 +124,15 @@ class ArchitectureParticle:
         self.position[-3:] = np.clip(self.position[-3:], 0.1, 2.0)
 
 
-def run_architecture_pso(n_layers,n_particles=10, max_iter=10):
-    swarm = [ArchitectureParticle(n_layers) for _ in range(n_particles)]
+def run_architecture_pso(n_layers,middle_pso_particles, middle_pso_iterations, inner_pso_particles, inner_pso_iterations):
+    swarm = [ArchitectureParticle(n_layers) for _ in range(middle_pso_particles)]
     global_best = None
     global_best_value = float('inf')
 
-    for _ in range(max_iter):
+    for _ in range(middle_pso_iterations):
         for p in swarm:
             n_hidden = p.get_hidden_units()
-            best_weights, train_mse = run_weight_pso(n_layers,n_hidden)
+            best_weights, train_mse = run_weight_pso(n_layers,n_hidden, inner_pso_particles, inner_pso_iterations)
 
             if train_mse < global_best_value:
                 global_best_value = train_mse
@@ -172,15 +172,15 @@ class LayerParticle:
         # Clip PSO params
         self.position[1:] = np.clip(self.position[1:], 0.1, 2.0)
 
-def run_layer_pso(n_particles=5, max_iter=5):
-    swarm = [LayerParticle() for _ in range(n_particles)]
+def run_layer_pso(outer_pso_particles, outer_pso_iterations, middle_pso_particles, middle_pso_iterations, inner_pso_particles, inner_pso_iterations):
+    swarm = [LayerParticle() for _ in range(outer_pso_particles)]
     global_best = None
     global_best_value = float('inf')
 
-    for _ in tqdm(range(max_iter)):
+    for _ in tqdm(range(outer_pso_iterations)):
         for p in swarm:
             n_layers = p.get_n_layers()
-            best_weights, train_mse = run_architecture_pso(n_layers)
+            best_weights, train_mse = run_architecture_pso(n_layers,middle_pso_particles, middle_pso_iterations, inner_pso_particles, inner_pso_iterations)
 
             if train_mse < global_best_value:
                 global_best_value = train_mse
@@ -203,16 +203,31 @@ def run_layer_pso(n_particles=5, max_iter=5):
 # ==============================================
 if __name__ == "__main__":
 
+    outer_pso_params = {
+        'n_particles': 5,
+        'max_iter': 2
+    }
+
+    middle_pso_params = {
+        'n_particles': 5,
+        'max_iter': 2
+    }
+
+    inner_pso_params = {
+        'n_particles': 5,
+        'max_iter': 10
+    }
+
     # Run layer optimization
-    best_layers, _ = run_layer_pso()
+    best_layers, _ = run_layer_pso(outer_pso_params['n_particles'], outer_pso_params['max_iter'], middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
     best_n_layers = int(round(best_layers[0]))
 
     # Run architecture optimization
-    best_arch, _ = run_architecture_pso(best_n_layers)
+    best_arch, _ = run_architecture_pso(best_n_layers, middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
     best_hidden = best_arch[1:-3].astype(int)
 
     # Retrain with best architecture
-    final_weights, train_mse = run_weight_pso(best_n_layers,best_hidden)
+    final_weights, train_mse = run_weight_pso(best_n_layers,best_hidden, inner_pso_params['n_particles'], inner_pso_params['max_iter'])
 
     print(f"\nParameters: {final_weights}")
     print(f"Train MSE: {train_mse:.4f}")
