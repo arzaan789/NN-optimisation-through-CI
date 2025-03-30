@@ -177,7 +177,7 @@ def run_layer_pso(outer_pso_particles, outer_pso_iterations, middle_pso_particle
     global_best = None
     global_best_value = float('inf')
 
-    for _ in tqdm(range(outer_pso_iterations)):
+    for _ in range(outer_pso_iterations):
         for p in swarm:
             n_layers = p.get_n_layers()
             best_weights, train_mse = run_architecture_pso(n_layers,middle_pso_particles, middle_pso_iterations, inner_pso_particles, inner_pso_iterations)
@@ -201,33 +201,33 @@ def run_layer_pso(outer_pso_particles, outer_pso_iterations, middle_pso_particle
 # ==============================================
 # Main Execution
 # ==============================================
-if __name__ == "__main__":
-
-    outer_pso_params = {
-        'n_particles': 5,
-        'max_iter': 2
-    }
-
-    middle_pso_params = {
-        'n_particles': 5,
-        'max_iter': 2
-    }
-
-    inner_pso_params = {
-        'n_particles': 5,
-        'max_iter': 10
-    }
-
-    # Run layer optimization
-    best_layers, _ = run_layer_pso(outer_pso_params['n_particles'], outer_pso_params['max_iter'], middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
-    best_n_layers = int(round(best_layers[0]))
-
-    # Run architecture optimization
-    best_arch, _ = run_architecture_pso(best_n_layers, middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
-    best_hidden = best_arch[1:-3].astype(int)
-
-    # Retrain with best architecture
-    final_weights, train_mse = run_weight_pso(best_n_layers,best_hidden, inner_pso_params['n_particles'], inner_pso_params['max_iter'])
-
-    print(f"\nParameters: {final_weights}")
-    print(f"Train MSE: {train_mse:.4f}")
+# if __name__ == "__main__":
+#
+#     outer_pso_params = {
+#         'n_particles': 5,
+#         'max_iter': 2
+#     }
+#
+#     middle_pso_params = {
+#         'n_particles': 5,
+#         'max_iter': 2
+#     }
+#
+#     inner_pso_params = {
+#         'n_particles': 5,
+#         'max_iter': 10
+#     }
+#
+#     # Run layer optimization
+#     best_layers, _ = run_layer_pso(outer_pso_params['n_particles'], outer_pso_params['max_iter'], middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
+#     best_n_layers = int(round(best_layers[0]))
+#
+#     # Run architecture optimization
+#     best_arch, _ = run_architecture_pso(best_n_layers, middle_pso_params['n_particles'], middle_pso_params['max_iter'], inner_pso_params['n_particles'], inner_pso_params['max_iter'])
+#     best_hidden = best_arch[1:-3].astype(int)
+#
+#     # Retrain with best architecture
+#     final_weights, train_mse = run_weight_pso(best_n_layers,best_hidden, inner_pso_params['n_particles'], inner_pso_params['max_iter'])
+#
+#     print(f"\nParameters: {final_weights}")
+#     print(f"Train MSE: {train_mse:.4f}")
